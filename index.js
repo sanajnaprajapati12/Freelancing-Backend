@@ -11,7 +11,8 @@ import otpRoutes from "./routes/otpRoutes.js"
 import uploadRoutes from "./routes/uploadRoutes.js";
 import clientProjectRoutes from "./routes/clientProjectRoutes.js";
 import projectassignRoutes from "./routes/projectAssignRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js"
+import taskRoutes from "./routes/taskRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 // Load environment variables
 dotenv.config();
 
@@ -21,9 +22,9 @@ const app = express();
 app.use(
   cors({
     origin: ["http://localhost:5173", "http://localhost:5174"],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json()); // parse JSON
@@ -35,6 +36,8 @@ app.use("/v1/api",userRoutes);// parse cookies
 app.use("/v1/api/upload", uploadRoutes);
 app.use("/v1/api",projectassignRoutes);
 app.use("/v1/api",taskRoutes)
+
+app.use("/v1/api", chatRoutes);
 // ✅ Test route
 app.get("/", (req, res) => {
   res.send("API is running...");

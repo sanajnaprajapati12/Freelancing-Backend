@@ -9,6 +9,7 @@ const createProject = async (req, res) => {
     if (req.user) {
       projectData.clientId = req.user.id;
     }
+      
 
     const newProject = await ClientProject.create(projectData);
 
@@ -61,12 +62,16 @@ const getProjectsByClientId = async (req, res) => {
     }
 
     const projects = await ClientProject.find({ clientId })
-      .populate("assignedSubadmins", "fullname email role") // ⭐ SHOW ASSIGNED SUBADMINS
+      .populate("assignedSubadmins", "fullname email role")
+      // ⭐ SHOW ASSIGNED SUBADMINS
       .populate("clientId", "fullname email") // ⭐ CLIENT DETAILS
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
+      
+
+      
       data: projects,
     });
   } catch (err) {
@@ -74,7 +79,7 @@ const getProjectsByClientId = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
-// ===============================
+
 const getProjectById = async (req, res) => {
   try {
     const project = await ClientProject.findById(req.params.id)
@@ -100,17 +105,25 @@ const getProjectById = async (req, res) => {
 
 const updateProject = async (req, res) => {
   try {
+    // 1️⃣ Get old project
+    const oldProject = await ClientProject.findById(req.params.id);
+
+    if (!oldProject) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    // 2️⃣ Prevent clientId from being overwritten or removed
+    req.body.clientId = oldProject.clientId;
+
+    // 3️⃣ Update with safe fields
     const updatedProject = await ClientProject.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
     );
-
-    if (!updatedProject) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Project not found" });
-    }
 
     res.status(200).json({
       success: true,
@@ -123,9 +136,7 @@ const updateProject = async (req, res) => {
   }
 };
 
-// ===============================
-// 📌 Delete project by ID
-// ===============================
+
 const deleteProject = async (req, res) => {
   try {
     const deletedProject = await ClientProject.findByIdAndDelete(req.params.id);
@@ -146,9 +157,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-// ===============================
-// ✅ Export all controllers
-// ===============================
 export default {
   createProject,
   getAllProjects,

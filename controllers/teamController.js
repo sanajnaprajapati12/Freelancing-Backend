@@ -129,8 +129,33 @@ const getSingleProject = async (req, res) => {
     });
   }
 };
+const getSubadminDevelopers = async (req, res) => {
+  try {
+    const subadminId = req.user.id; // Logged-in subadmin
+
+    // Find teams created by this subadmin
+    const teams = await Team.find({ createdBy: subadminId }).populate(
+      "members"
+    );
+
+    // Combine all developers from all teams
+    const allDevelopers = [];
+    teams.forEach((team) => {
+      allDevelopers.push(...team.members);
+    });
+
+    res.json({
+      success: true,
+      developers: allDevelopers,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 export default{
     createTeam,
     viewTeamsByProject,
-    getSingleProject
+    getSingleProject,
+    getSubadminDevelopers
 }

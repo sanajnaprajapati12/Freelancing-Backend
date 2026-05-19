@@ -6,10 +6,15 @@ import auth from "../middleware/authMiddleware.js";
 // Routes
 router.post(
   "/create-project",
-   auth.verifyToken,
+  auth.verifyToken,
+  auth.checkRole(["client"]),
   clientProjectController.createProject
 );
-router.get("/getAllproject", clientProjectController.getAllProjects);
+router.get(
+  "/getAllproject",
+   
+  clientProjectController.getAllProjects
+);
 router.get("/getProjectbyId/:id", clientProjectController.getProjectById);
 router.put(
   "/update-project/:id",
@@ -25,6 +30,7 @@ router.put(
 router.delete("/delete-project/:id",clientProjectController.deleteProject);
 router.get(
   "/getAllprojectbyClinetid",
+   
    auth.verifyToken,
   clientProjectController.getProjectsByClientId
 );

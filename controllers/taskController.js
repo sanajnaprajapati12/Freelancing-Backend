@@ -4,27 +4,27 @@ import ClientProject from "../models/client.js";
 import clientProjectController from "./clientProjectController.js";
 const createTask = async (req, res) => {
   try {
-    const { projectId, taskTitle, taskDescription, extraMessage, assignedTo,image } =
+    const { projectId } = req.params;
+    const { taskTitle, taskDescription, extraMessage, assignedTo, image } =
       req.body;
-    const createdBy = req.user?.id; // subadmin ID
+
+    const createdBy = req.user?.id || req.body.createdBy;
 
     if (!projectId || !taskTitle || !taskDescription) {
       return res.status(400).json({
         success: false,
-        message: "projectId, taskTitle and taskDescription are required",
+        message: "projectId, taskTitle and taskDescription are required.",
       });
     }
 
-    // Check project exists
     const project = await ClientProject.findById(projectId);
     if (!project) {
       return res.status(404).json({
         success: false,
-        message: "Project not found",
+        message: "Project not found.",
       });
     }
 
-    // Create task
     const task = await Task.create({
       projectId,
       taskTitle,
@@ -32,12 +32,12 @@ const createTask = async (req, res) => {
       extraMessage,
       assignedTo,
       createdBy,
-      image
+      image: image || "", // URL will come here
     });
 
     return res.status(201).json({
       success: true,
-      message: "Task created successfully",
+      message: "Task created successfully.",
       data: task,
     });
   } catch (error) {
@@ -45,9 +45,16 @@ const createTask = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error",
+      error: error.message,
     });
   }
 };
+
+
+
+
+
+
 
  const getAllTasks = async (req, res) => {
   try {
@@ -136,17 +143,7 @@ const getTasksByProject = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-const getTasksByAssignedUser = async (req, res) => {
-  try {
-    const tasks = await Task.find({ assignedTo: req.params.userId })
-      .populate("projectId", "projectName")
-      .sort({ createdAt: -1 });
 
-    res.status(200).json({ success: true, tasks });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
 const updateTask = async (req, res) => {
   try {
     const allowed = [
@@ -211,6 +208,169 @@ const getTasksBySubadmin = async (req, res) => {
     });
   }
 };
+// Assign task to a user
+const assignTask = async (req, res) => {
+  try {
+    const taskId = req.params.id; // use params.id (NOT taskId)
+    const { assignedTo } = req.body;
+
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    task.assignedTo = assignedTo;
+    task.assignedBy = req.user.id;
+    task.status = "assigned"; // <-- UPDATE HERE
+
+    await task.save();
+
+    const updatedTask = await Task.findById(taskId); // fetch updated data
+
+    res.json({
+      success: true,
+      message: "Task assigned successfully",
+      data: updatedTask,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getMyTasks = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const tasks = await Task.find({
+      assignedTo: userId,
+    })
+      .populate("projectId", "projectName")
+      .populate("assignedBy", "fullname role email");
+
+    res.status(200).json({
+      success: true,
+      tasks,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const getTasksByAssignedUser = async (req, res) => {
+  try {
+    const tasks = await Task.find({
+      assignedTo: req.params.userId,
+    })
+      .populate("projectId", "projectName")
+      .populate("assignedBy", "fullname email")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const markTaskSeen = async (req, res) => {
+  try {
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      { isSeen: true },
+      { new: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Task marked as seen",
+      task,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const updateProgress = async (req, res) => {
+  try {
+    const { percent } = req.body;
+
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      {
+        "progress.percent": percent,
+        "progress.updatedAt": new Date(),
+      },
+      { new: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Progress updated",
+      task,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Status updated",
+      task,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+const addRemarks = async (req, res) => {
+  try {
+    const { remarks } = req.body;
+
+    const task = await Task.findByIdAndUpdate(
+      req.params.id,
+      {
+        "progress.remarks": remarks,
+        "progress.updatedAt": new Date(),
+      },
+      { new: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Remarks added",
+      task,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
 export default {
     createTask,
    getAllTasks,
@@ -219,8 +379,13 @@ export default {
     getTasksByAssignedUser,
     getTasksByProject,
     getTasksBySubadmin,
-    
+    assignTask,
     updateTaskStatus,
-    deleteTask
+    deleteTask,
+    getMyTasks,
+    markTaskSeen,
+    updateProgress,
+    updateStatus,
+    addRemarks
 
 }

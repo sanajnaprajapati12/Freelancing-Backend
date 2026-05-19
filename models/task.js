@@ -35,12 +35,17 @@ const TaskSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-
-    assignedTo: {
+    assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null,
     },
+
+    assignedTo: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     isSeen: {
       type: Boolean,
       default: false,
@@ -48,7 +53,7 @@ const TaskSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Completed", "Hold"],
+      enum: ["Pending", "In Progress", "Completed", "Hold", "assigned"],
       default: "Pending",
     },
 
@@ -70,7 +75,6 @@ const TaskSchema = new mongoose.Schema(
   },
 
   { timestamps: true }
-  
 );
 
 export default mongoose.model("Task", TaskSchema);

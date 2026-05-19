@@ -1,7 +1,8 @@
 import ProjectAssign from "../models/projectassign.js";
 import User from "../models/User.js";
 import ClientProject from "../models/client.js";
-
+import Team from "../models/Team.js";
+import mongoose from "mongoose";
 // ================================
 // ✅ Assign Project to SubAdmin
 // ================================
@@ -18,7 +19,7 @@ const assignProject = async (req, res) => {
 
     // Check project exists
     const projectExists = await ClientProject.findById(projectId);
- 
+
     if (!projectExists) {
       return res.status(404).json({
         success: false,
@@ -43,7 +44,8 @@ const assignProject = async (req, res) => {
         message: "This project is already assigned.",
       });
     }
-
+    // Fetch team members using the correct field
+    
     // Create assignment
     const newAssignment = await ProjectAssign.create({
       isAssigned: true,
@@ -53,6 +55,7 @@ const assignProject = async (req, res) => {
       dueDate,
       priority,
       status: "assigned",
+     
     });
 
     // ⭐ VERY IMPORTANT: Add assigned subadmin inside ClientProject
@@ -88,7 +91,8 @@ const getAllAssignedProjects = async (req, res) => {
     const assignments = await ProjectAssign.find()
       .populate("projectId", "projectName projectPurpose status")
       .populate("assignedBy", "name email role")
-      .populate("assignedTo", "name email role");
+      .populate("assignedTo", "name email role")
+      
 
     res.status(200).json({
       success: true,
@@ -103,17 +107,19 @@ const getAllAssignedProjects = async (req, res) => {
     });
   }
 };
-
-// ================================
-// ✅ Get Projects by SubAdmin
-// ================================
 const getSubAdminProjects = async (req, res) => {
   try {
     const { subAdminId } = req.params;
 
     const projects = await ProjectAssign.find({ assignedTo: subAdminId })
-      .populate("projectId", "projectName projectPurpose status")
-      .populate("assignedBy", "name email role");
+      .populate({
+        path: "projectId",
+        select: "projectName projectPurpose status techStack teamSize",
+      })
+      .populate({
+        path: "assignedBy",
+        select: "fullname email role",
+      });
 
     res.status(200).json({
       success: true,
@@ -129,9 +135,7 @@ const getSubAdminProjects = async (req, res) => {
   }
 };
 
-// ================================
-// ✅ Update Assignment Status (SubAdmin Dashboard)
-// ================================
+
 const updateAssignmentStatus = async (req, res) => {
   try {
     const { id } = req.params;

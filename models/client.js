@@ -70,6 +70,7 @@ const ClientProjectSchema = new mongoose.Schema(
       testers: { type: Number, default: 0 },
       others: { type: Number, default: 0 },
     },
+    
 
     projectType: {
       type: String,
@@ -81,7 +82,7 @@ const ClientProjectSchema = new mongoose.Schema(
       clientname: { type: String },
       contactPerson: { type: String },
       email: { type: String },
-      phone: { type: String },
+      mobile: { type: String },
       address: { type: String },
     },
 
@@ -103,7 +104,7 @@ const ClientProjectSchema = new mongoose.Schema(
       companyname: { type: String },
       contactPerson: { type: String },
       email: { type: String },
-      phone: { type: String },
+      mobile: { type: String },
       address: { type: String },
     },
 

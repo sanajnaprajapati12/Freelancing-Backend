@@ -21,6 +21,19 @@ const ProjectAssignSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    
+    teamMembers: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        role: {
+          type: String,
+          enum: ["dev", "design", "test", "other"],
+        },
+      },
+    ],
 
     assignmentDate: { type: Date, default: Date.now },
     dueDate: { type: Date },
@@ -32,10 +45,10 @@ const ProjectAssignSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending","assigned", "In Progress", "On Hold", "Completed"],
+      enum: ["Pending", "assigned", "In Progress", "On Hold", "Completed"],
       default: "Pending",
     },
-
+    
     progress: {
       percent: { type: Number, default: 0 },
       remarks: { type: String, default: "" },
@@ -58,6 +71,19 @@ const ProjectAssignSchema = new mongoose.Schema(
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
+    // teamMembers: [
+    //   {
+    //     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    //     role: { type: String, enum: ["dev", "design", "test", "other"] },
+    //   },
+    // ],
+
+    // teamMembersCount: {
+    //   dev: { type: Number, default: 0 },
+    //   design: { type: Number, default: 0 },
+    //   test: { type: Number, default: 0 },
+    //   other: { type: Number, default: 0 },
+    // },
 
     approval: {
       isApproved: { type: Boolean, default: false },
